@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pedidos Lojas</title>
+<link rel="manifest" href="manifest.json">
+<style>
+body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#f4f6f8;color:#1f2937}
+header{background:#173a63;color:#fff;padding:14px 16px;position:sticky;top:0;z-index:5}
+.container{max-width:1280px;margin:0 auto;padding:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.row>*{flex:1;min-width:140px}
+.card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:14px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.tabs button{border:0;background:#dfe8f5;color:#173a63;padding:10px 12px;border-radius:10px;cursor:pointer}.tabs button.active{background:#173a63;color:#fff}
+.tab{display:none}.tab.active{display:block}
+input,select{width:100%;padding:10px;border:1px solid #d7dee6;border-radius:10px;box-sizing:border-box}
+button{border:0;background:#2d7ff9;color:#fff;padding:10px 12px;border-radius:10px;cursor:pointer} button.light{background:#eef3f8;color:#173a63} button.alt{background:#16a085} button.warn{background:#d35400} button.danger{background:#c0392b}
+table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border-bottom:1px solid #eef1f4;padding:8px;text-align:left;font-size:14px;vertical-align:top}
+.table-wrap{overflow:auto}.small{font-size:12px;color:#6b7280}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef3f8;color:#173a63;font-size:12px}
+.notice{padding:10px;border-radius:10px;background:#eef8ff;color:#17406a;white-space:pre-wrap}.ok{background:#eefbf3;color:#135c32}.error{background:#fff1f0;color:#8a1f11}.warnbox{background:#fff8e8;color:#7a5200}
+.two{display:grid;grid-template-columns:1fr;gap:14px}@media(min-width:980px){.two{grid-template-columns:1.1fr .9fr}}
+.pagination{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}.pagination .controls{display:flex;gap:6px;flex-wrap:wrap}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.summary-box{padding:10px;border-radius:10px;background:#f7fafc;border:1px solid #e5edf5}
+.link-btn{background:none;border:0;color:#2d7ff9;padding:0;cursor:pointer;font-weight:700}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:80}.modal-backdrop.show{display:flex}.modal{background:#fff;border-radius:16px;max-width:1100px;width:100%;max-height:90vh;overflow:auto;padding:16px;box-shadow:0 16px 40px rgba(0,0,0,.25)}
+.modal-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
+.qty-stack{display:flex;gap:8px;align-items:stretch}.qty-stack .qty-buttons{display:flex;flex-direction:column;gap:6px;max-width:52px}.qty-red{background:#c0392b;color:#fff;font-weight:700;padding:8px 10px}.qty-value{flex:1}
+@media print{header,.tabs,.no-print,#msg,.modal-backdrop{display:none!important}.card{box-shadow:none;border:1px solid #ddd}body{background:#fff}}
+
+textarea{font-family:inherit}
+.brand-shell{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:
+radial-gradient(circle at top left, rgba(91,141,239,.28), transparent 28%),
+radial-gradient(circle at bottom right, rgba(44,211,177,.22), transparent 24%),
+linear-gradient(135deg,#0f2744 0%,#173a63 45%,#0b1727 100%)}
+.brand-card{max-width:980px;width:100%;display:grid;grid-template-columns:1.2fr .9fr;gap:22px;background:rgba(255,255,255,.08);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);border-radius:28px;padding:28px;box-shadow:0 30px 80px rgba(0,0,0,.28);color:#fff}
+.brand-title{font-size:42px;line-height:1.05;margin:0 0 12px;font-weight:800}
+.brand-sub{font-size:16px;line-height:1.6;color:rgba(255,255,255,.86);max-width:560px}
+.brand-badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.brand-badges span{padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);font-size:13px}
+.brand-panel{background:#fff;color:#1b1f24;border-radius:24px;padding:22px;box-shadow:0 20px 45px rgba(0,0,0,.2)}
+.brand-panel h2{margin:0 0 8px;color:#173a63}
+.brand-panel p{margin:0 0 16px;color:#51606f}
+.brand-cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.secure-box{border:1px dashed #bfd0e5;background:#f7fbff;border-radius:14px;padding:12px;margin-top:10px}
+.admin-lock{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.overlay-screen{position:fixed;inset:0;z-index:60}
+.hidden{display:none!important}
+@media(max-width:900px){.brand-card{grid-template-columns:1fr}.brand-title{font-size:34px}}
+
+</style>
+</head>
+<body>
+
+<div id="welcomeScreen" class="overlay-screen">
+  <div class="brand-shell">
+    <div class="brand-card">
+      <div>
+        <div class="badge" style="background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.18)">Sistema de Pedidos e Separação</div>
+        <h1 class="brand-title">Rio das Estrelas</h1>
+        <div class="brand-sub">Uma experiência profissional para controle de estoque, pedidos, ordens e faltas de separação, com acesso seguro para a equipe e operação centralizada por loja.</div>
+        <div class="brand-badges">
+          <span>Controle de estoque</span>
+          <span>Ordens e separação</span>
+          <span>Histórico com exportação</span>
+          <span>Autenticação segura</span>
+        </div>
+        <div class="brand-cta">
+          <button onclick="startApp()" style="background:#2dd4bf;color:#073b35;font-weight:700">Entrar no sistema</button>
+          <button class="light" onclick="openLogin()" style="background:rgba(255,255,255,.14);color:#fff">Acessar conta</button>
+        </div>
+      </div>
+      <div class="brand-panel">
+        <h2>Bem-vindo</h2>
+        <p>Faça login para liberar o painel. As ações administrativas agora exigem confirmação com a senha do administrador.</p>
+        <div class="small" style="color:#4b5c6d">Empresa: <strong>Rio das Estrelas</strong></div>
+        <div class="small" style="margin-top:8px;color:#4b5c6d">Perfis previstos: administrador, funcionário e separador.</div>
+        <div style="margin-top:18px"><button onclick="openLogin()" style="width:100%">Abrir login</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="row" style="align-items:center">
+    <div style="flex:2;min-width:220px"><strong style="font-size:18px">Pedidos Lojas</strong></div>
+    <div><span class="badge" id="who">offline</span></div>
+    <div><span class="badge" id="storeBadge">Loja 01</span></div>
+    <div><button class="light" onclick="openLogin()">Entrar</button></div>
+    <div><button class="light" onclick="logout()">Sair</button></div>
+    <div><button class="light" onclick="syncAll()">Sincronizar</button></div>
+    <div><button class="light" onclick="openAccountModal()">Conta</button></div>
+  </div>
+</header>
+<div class="container">
+  <div class="tabs no-print">
+    <button class="active" onclick="showTab('estoque', this)">Buscar estoque</button>
+    <button onclick="showTab('pedido', this)">Pedido de loja</button>
+    <button onclick="showTab('ordem', this)">Ordem de pedidos</button>
+    <button onclick="showTab('separacao', this)">Faltas de separação</button>
+    <button onclick="showTab('admin', this)">Admin / Importação</button>
+  </div>
+  <div id="msg"></div>
+
+  <section id="estoque" class="tab active">
+    <div class="two">
+      <div class="card">
+        <div class="row">
+          <div style="flex:3"><label>Buscar produto</label><input id="searchStock" placeholder="Código, produto, material ou use IMA%G% / IMA%P%" oninput="renderProducts()"></div>
+          <div style="max-width:120px"><label>Exibir</label><select id="stockPageSize" onchange="setPageSize('stock', this.value)"><option>10</option><option>20</option><option>50</option><option>100</option></select></div><div style="max-width:230px"><label>&nbsp;</label><button class="alt" style="width:100%" onclick="generateStockReport()">Gerar relatório de estoque</button></div>
+        </div>
+        <div class="small" style="margin-top:8px">Busca com variação: use curingas no código. Ex.: IMA%G%, IMA%P%, PDF%S%, PDF02%.</div>
+        <div class="table-wrap"><table><thead><tr><th><input type="checkbox" id="checkAllFiltered" style="width:auto" onchange="toggleSelectAllFiltered(this.checked)"></th><th>Código</th><th>Produto</th><th>Material</th><th>Estoque</th><th>Fator</th><th>Ação</th></tr></thead><tbody id="tbodyProducts"></tbody></table></div>
+        <div id="stockPager" class="pagination"></div>
+      </div>
+      <div class="card" id="stockEditCard">
+        <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap"><h3 style="margin-top:0">Editar produto</h3><button id="bulkEditBtn" class="warn" onclick="selectAllForBulkEdit()">Editar todos</button></div>
+        <div class="small">Os 3 primeiros dígitos compartilham o mesmo fator de conversão.</div>
+        <div class="row" style="margin-top:8px">
+          <div><label><input id="applySingle" name="factorMode" type="radio" checked style="width:auto;margin-right:6px" onchange="updateFactorSelectionInfo()">Aplicar somente neste produto</label></div>
+          <div><label><input id="applySelected" name="factorMode" type="radio" style="width:auto;margin-right:6px" onchange="updateFactorSelectionInfo()">Aplicar nos produtos selecionados</label></div>
+          <div><label><input id="applyFiltered" name="factorMode" type="radio" style="width:auto;margin-right:6px" onchange="updateFactorSelectionInfo()">Aplicar em todos da busca atual</label></div>
+        </div>
+        <div class="small" id="factorSelectionSummary" style="margin-top:6px">Busca atual: todos os produtos.</div>
+        <div class="row" style="margin-top:8px"><div><label>Código</label><textarea id="editCode" rows="3" placeholder="Selecione vários códigos ou digite separados por vírgula, espaço ou nova linha"></textarea></div><div><label>Produto</label><input id="editProduct"></div></div>
+        <div class="row"><div><label>Material</label><input id="editMaterial"></div><div><label>Estoque</label><input id="editStock" type="number" step="0.01"></div></div>
+        <div class="row"><div><label>Fator</label><input id="editFactor" type="number" min="1" step="1"></div><div><button id="saveProductEditBtn" class="alt" onclick="saveProductEdit()">Salvar alteração</button></div></div>
+        <div id="factorInfo" class="notice" style="margin-top:10px">Selecione um produto para editar.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pedido" class="tab">
+    <div class="two">
+      <div class="card">
+        <div class="row">
+          <div style="flex:3"><label>Buscar produto para pedido</label><input id="searchOrder" placeholder="Buscar produto ou código. Ex.: IMA%G%" oninput="renderOrderCatalog()"></div>
+          <div style="max-width:120px"><label>Exibir</label><select id="orderPageSize" onchange="setPageSize('orderCatalog', this.value)"><option>10</option><option>20</option><option>50</option><option>100</option></select></div>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Código</th><th>Produto</th><th>Estoque</th><th>Fator</th><th></th></tr></thead><tbody id="tbodyOrderCatalog"></tbody></table></div>
+        <div id="orderCatalogPager" class="pagination"></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Adicionar ao pedido</h3>
+        <div class="row"><div><label>Código</label><input id="orderCode" readonly></div><div><label>Produto</label><input id="orderProduct" readonly></div></div>
+        <div class="row"><div><label>Fator</label><input id="orderFactor" readonly></div><div><label>Estoque</label><input id="orderStock" readonly></div></div>
+        <div class="row"><div><label>Caixas</label><div class="qty-stack"><div class="qty-buttons"><button class="qty-red" onclick="adjustBoxes(1)">+</button><button class="qty-red" onclick="adjustBoxes(-1)">-</button></div><div class="qty-value"><input id="orderBoxes" type="number" min="0" step="0.01" oninput="calcOrderFromBoxes()"></div></div></div><div><label>Unidades</label><input id="orderUnits" type="number" min="0" step="0.01" oninput="calcOrderFromUnits()"></div></div>
+        <div id="orderCalc" class="notice">Selecione um produto.</div>
+        <div class="row" style="margin-top:8px"><div><button class="alt" onclick="addDraftItem()">Adicionar ao pedido</button></div><div><button class="light" onclick="clearCurrentSelection()">Limpar seleção</button></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div style="flex:3"><h3 style="margin:0">Pré-visualização do pedido em montagem</h3></div>
+        <div><button class="alt" onclick="finalizeOrder()">Salvar pedido</button></div>
+        <div><button class="light" onclick="clearDraftOrder()">Limpar montagem</button></div>
+        <div style="max-width:120px"><label>Exibir</label><select id="draftPageSize" onchange="setPageSize('draft', this.value)"><option>10</option><option>20</option><option>50</option><option>100</option></select></div>
+      </div>
+      <div id="draftSummary" class="summary-grid" style="margin-top:10px"></div>
+      <div style="margin-top:10px"><label>Observação do pedido</label><textarea id="orderObservation" rows="3" placeholder="Ex.: entregar primeiro, atenção ao estoque, observações da loja" style="width:100%;padding:10px;border:1px solid #d7dee6;border-radius:10px;box-sizing:border-box"></textarea></div>
+      <div class="table-wrap"><table><thead><tr><th>Código</th><th>Produto</th><th>Caixas</th><th>Unidades</th><th>Fator</th><th>Ação</th></tr></thead><tbody id="tbodyDraft"></tbody></table></div>
+      <div id="draftPager" class="pagination"></div>
+    </div>
+  </section>
+
+  <section id="ordem" class="tab">
+    <div class="card">
+      <div class="row no-print">
+        <div><label>Loja</label><select id="storeSelect" onchange="changeStore(this.value)"></select></div>
+        <div style="max-width:120px"><label>Exibir</label><select id="ordersPageSize" onchange="setPageSize('ordersHistory', this.value)"><option>10</option><option>20</option><option>50</option><option>100</option></select></div>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Ordem</th><th>Data</th><th>Itens</th><th>Caixas</th><th>Unidades</th><th>Ações</th></tr></thead><tbody id="tbodyOrders"></tbody></table></div>
+      <div id="ordersPager" class="pagination"></div>
+    </div>
+  </section>
+
+  <section id="separacao" class="tab">
+    <div class="card">
+      <h3 style="margin-top:0">Ordens para marcar faltas</h3>
+      <div class="small">Na lupa da ordem, marque os produtos que não foram e informe quantas caixas permaneceram no estoque.</div>
+      <div class="table-wrap"><table><thead><tr><th>Ordem</th><th>Data</th><th>Itens</th><th>Caixas</th><th>Ação</th></tr></thead><tbody id="tbodySeparationOrders"></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div style="flex:3"><h3 style="margin:0">Histórico de faltas</h3></div>
+        <div style="max-width:120px"><label>Exibir</label><select id="shortagesPageSize" onchange="setPageSize('shortagesHistory', this.value)"><option>10</option><option>20</option><option>50</option><option>100</option></select></div>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Ordem</th><th>Data</th><th>Itens</th><th>Permaneceu (caixas)</th><th>Enviado (caixas)</th><th>Ações</th></tr></thead><tbody id="tbodyShortages"></tbody></table></div>
+      <div id="shortagesPager" class="pagination"></div>
+    </div>
+  </section>
+
+  <section id="admin" class="tab">
+    <div class="card">
+      <h3 style="margin-top:0">Importar estoque</h3>
+      <div class="small">Importa PDF, Word e Excel.</div>
+      <div class="row" style="margin-top:10px"><div><input id="fileImport" type="file" multiple accept=".pdf,.docx,.xlsx,.xls,.csv,.txt"></div><div><button class="alt" onclick="importFiles()">Importar arquivos</button></div></div>
+      <div id="importMsg" class="notice" style="margin-top:10px">Aguardando importação.</div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Usuários e permissões</h3>
+      <div class="small">Administradores podem criar usuários, alterar permissões, vincular loja, renomear e redefinir senhas.</div>
+      <div class="row" style="margin-top:10px">
+        <div><label>Usuário</label><input id="newUsername"></div>
+        <div><label>Senha</label><input id="newPassword" type="password"></div>
+        <div><label>Permissão</label><select id="newRole"><option value="admin">Administrador</option><option value="funcionario">Funcionário</option><option value="separador">Separador</option></select></div>
+        <div><label>Loja</label><select id="newUserStore"></select></div>
+        <div><button class="alt" onclick="createUser()">Criar usuário</button></div>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Usuário</th><th>Permissão</th><th>Loja</th><th>Criado em</th><th>Ações</th></tr></thead><tbody id="tbodyUsers"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Lojas</h3>
+      <div class="table-wrap"><table><thead><tr><th>Código</th><th>Nome da loja</th><th>Ação</th></tr></thead><tbody id="tbodyStoresAdmin"></tbody></table></div>
+    </div>
+  </section>
+</div>
+
+<div id="loginModal" class="modal-backdrop">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><strong>Entrar</strong><button class="light" onclick="closeLogin()">Fechar</button></div>
+    <div class="row"><div><label>Usuário</label><input id="loginUser" value="" autocomplete="username"></div></div>
+    <div class="row"><div><label>Senha</label><input id="loginPass" type="password" value="" autocomplete="current-password"></div></div>
+    <div class="row" style="margin-top:8px"><div><button onclick="doLogin()">Entrar</button></div></div>
+    <hr style="margin:14px 0;border:none;border-top:1px solid #e5edf5">
+    <div class="small">Perdeu o acesso? Redefina sua senha.</div>
+    <div class="row"><div><label>Usuário</label><input id="resetUsername"></div></div>
+    <div class="row"><div><label>Nova senha</label><input id="resetPassword" type="password"></div></div>
+    <div class="row"><div><label>Confirmar nova senha</label><input id="resetPassword2" type="password"></div></div>
+    <div class="row" style="margin-top:8px"><div><button class="warn" onclick="forgotPassword()">Redefinir minha senha</button></div></div>
+  </div>
+</div>
+
+
+<div id="accountModal" class="modal-backdrop">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-head"><strong>Trocar login e senha</strong><button class="light" onclick="closeAccountModal()">Fechar</button></div>
+    <div class="row"><div><label>Novo login</label><input id="accountUsername"></div></div>
+    <div class="row"><div><label>Nova senha</label><input id="accountPassword" type="password"></div></div>
+    <div class="row"><div><label>Confirmar senha</label><input id="accountPassword2" type="password"></div></div>
+    <div class="row" style="margin-top:8px"><div><button onclick="changeOwnCredentials()">Salvar acesso</button></div></div>
+  </div>
+</div>
+
+
+<div id="adminPasswordModal" class="modal-backdrop">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><strong>Confirmar ação crítica</strong><button class="light" onclick="closeAdminPasswordModal()">Fechar</button></div>
+    <div class="small" id="adminPasswordModalMessage">Digite a senha do administrador.</div>
+    <div class="row" style="margin-top:10px"><div><label>Senha do administrador</label><input id="adminPasswordModalInput" type="password" placeholder="Senha"></div></div>
+    <div class="row" style="margin-top:10px"><div><button class="alt" onclick="confirmAdminPasswordModal()">Confirmar</button></div><div><button class="light" onclick="closeAdminPasswordModal()">Cancelar</button></div></div>
+  </div>
+</div>
+
+<div id="orderModal" class="modal-backdrop"></div>
+<div id="shortageModal" class="modal-backdrop"></div>
+
+<script>
+const LS = { token:'pedidos_token', user:'pedidos_user', role:'pedidos_role', store:'pedidos_store', userStore:'pedidos_user_store' };
+const state = {
+  products:[], stores:{}, users:[], selectedStore:'01', draft:[], ordersHistory:[], shortagesHistory:[],
+  selectedProductCodes:new Set(),
+  paging:{ stock:1, orderCatalog:1, draft:1, ordersHistory:1, shortagesHistory:1 },
+  sizes:{ stock:10, orderCatalog:10, draft:10, ordersHistory:10, shortagesHistory:10 }
+};
+const $ = (id)=>document.getElementById(id);
+
+function showWelcomeScreen(){ $('welcomeScreen').classList.remove('hidden'); }
+function hideWelcomeScreen(){ $('welcomeScreen').classList.add('hidden'); }
+function startApp(){ openLogin(true); }
+function hideWelcomeIfLogged(){ if(hasToken()) hideWelcomeScreen(); else showWelcomeScreen(); }
+function parseCodesInput(value){ return Array.from(new Set(String(value||'').split(/[\s,;]+/).map(v=>v.trim().toUpperCase()).filter(Boolean))); }
+function updateSelectedCodesBox(){ const box=$('editCode'); if(!box) return; box.value = Array.from(state.selectedProductCodes).join(', '); }
+function syncSelectedCodesFromBox(){ const codes=parseCodesInput($('editCode').value); state.selectedProductCodes = new Set(codes); updateFactorSelectionInfo(); renderProducts(); }
+function selectAllForBulkEdit(){ if(!canEditStock()) return flash('Somente o administrador pode editar produtos.','warnbox'); const filtered=getFilteredProducts(); if(!filtered.length) return flash('Nenhum produto encontrado na busca atual.','warnbox'); filtered.forEach(p=>state.selectedProductCodes.add(p.code)); $('applySelected').checked=true; $('applySingle').checked=false; if($('applyFiltered')) $('applyFiltered').checked=false; updateSelectedCodesBox(); if(!$('editProduct').value && filtered.length===1) $('editProduct').value = filtered[0].product||''; if(!$('editMaterial').value && filtered.length===1) $('editMaterial').value = filtered[0].material||''; updateFactorSelectionInfo(); renderProducts(); $('editCode').focus(); }
+const adminPasswordDialogState = { resolver:null, rejecter:null };
+async function askAdminPassword(message='Confirme a senha do administrador'){
+  return new Promise((resolve, reject) => {
+    adminPasswordDialogState.resolver = resolve;
+    adminPasswordDialogState.rejecter = reject;
+    $('adminPasswordModalMessage').textContent = message;
+    $('adminPasswordModalInput').value = '';
+    $('adminPasswordModal').classList.add('show');
+    setTimeout(()=> $('adminPasswordModalInput').focus(), 30);
+  });
+}
+function closeAdminPasswordModal(cancel=true){
+  $('adminPasswordModal').classList.remove('show');
+  if(cancel && adminPasswordDialogState.rejecter){
+    adminPasswordDialogState.rejecter(new Error('A ação foi cancelada.'));
+  }
+  adminPasswordDialogState.resolver = null;
+  adminPasswordDialogState.rejecter = null;
+}
+function confirmAdminPasswordModal(){
+  const pwd = $('adminPasswordModalInput').value.trim();
+  if(!pwd){ flash('Digite a senha do administrador.','warnbox'); return; }
+  $('adminPasswordModal').classList.remove('show');
+  if(adminPasswordDialogState.resolver) adminPasswordDialogState.resolver(pwd);
+  adminPasswordDialogState.resolver = null;
+  adminPasswordDialogState.rejecter = null;
+}
+function fmt(v){ const n=Number(v||0); return n.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:2}); }
+function dt(v){ return v ? new Date(v).toLocaleString('pt-BR') : '-'; }
+function flash(text, cls='notice'){ $('msg').innerHTML = `<div class="notice ${cls}">${text}</div>`; setTimeout(()=>{ $('msg').innerHTML=''; }, 3500); }
+function headers(json=true){ const h={}; const t=localStorage.getItem(LS.token); if(t) h.Authorization=`Bearer ${t}`; if(json) h['Content-Type']='application/json'; return h; }
+function hasToken(){ return !!localStorage.getItem(LS.token); }
+function clearSession(){ localStorage.removeItem(LS.token); localStorage.removeItem(LS.user); localStorage.removeItem(LS.role); localStorage.removeItem(LS.userStore); }
+function role(){ return localStorage.getItem(LS.role)||''; }
+function canEditOrders(){ return ['admin','funcionario'].includes(role()); }
+function canEditStock(){ return role()==='admin'; }
+function canImport(){ return role()==='admin'; }
+function canManageUsers(){ return role()==='admin'; }
+function requireLogin(message='Faça login para continuar.'){ if(!hasToken()){ openLogin(true); flash(message,'warnbox'); return false; } return true; }
+function showTab(id, btn){ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); $(id).classList.add('active'); document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active')); if(btn) btn.classList.add('active'); }
+function updateBadges(){ $('who').textContent = localStorage.getItem(LS.user) ? `${localStorage.getItem(LS.user)} / ${localStorage.getItem(LS.role)}` : 'offline'; $('storeBadge').textContent = state.stores[state.selectedStore] || `Loja ${state.selectedStore}`; const adminTab=[...document.querySelectorAll('.tabs button')].find(b=>b.textContent.includes('Admin')); if(adminTab) adminTab.style.display=canImport() ? '' : 'none'; if($('fileImport')) $('fileImport').disabled=!canImport(); if($('newUsername')) $('newUsername').disabled=!canManageUsers(); if(!hasToken()){ $('importMsg').className='notice warnbox'; $('importMsg').textContent='Faça login como administrador para importar arquivos.'; } }
+function updateStockEditPermissions(){ const editable = canEditStock(); const ids=['checkAllFiltered','applySingle','applySelected','applyFiltered','editCode','editProduct','editMaterial','editStock','editFactor']; ids.forEach(id=>{ const el=$(id); if(!el) return; if(id==='editCode'){ el.readOnly=!editable; } else { el.disabled=!editable; } }); if($('bulkEditBtn')) $('bulkEditBtn').style.display = editable ? '' : 'none'; if($('saveProductEditBtn')) $('saveProductEditBtn').disabled = !editable; if($('saveProductEditBtn')) $('saveProductEditBtn').style.opacity = editable ? '1' : '0.6'; if($('stockEditCard')) $('stockEditCard').style.display = editable ? '' : 'none'; if($('factorInfo') && !editable){ $('factorInfo').textContent='Somente o administrador pode editar produtos nesta aba. Os demais usuários podem apenas visualizar.'; } }
+function openLogin(resetFields=false){ if(resetFields){ if($('loginUser')) $('loginUser').value=''; if($('loginPass')) $('loginPass').value=''; } $('loginModal').classList.add('show'); }
+function closeLogin(){ $('loginModal').classList.remove('show'); }
+function logout(){ clearSession(); updateBadges(); closeLogin(); showWelcomeScreen(); flash('Sessão encerrada.','warnbox'); }
+async function api(url, opts={}){ const res = await fetch(url, opts); let data={}; try{ data = await res.json(); }catch{ data = {}; } if(res.status===401){ clearSession(); updateBadges(); closeLogin(); showWelcomeScreen(); throw new Error(data.error || 'Faça login para continuar.'); } if(!res.ok) throw new Error(data.error || 'Falha na requisição.'); return data; }
+function paginate(items, page, size){ const totalItems=items.length; const totalPages=Math.max(1, Math.ceil(totalItems/size)); const safePage=Math.min(Math.max(1,page), totalPages); const start=(safePage-1)*size; return { page:safePage, totalPages, totalItems, items:items.slice(start,start+size) }; }
+function pager(el, key, totalItems, totalPages, page){ $(el).innerHTML = `<div class="small">${totalItems} registro(s) | Página ${page} de ${totalPages}</div><div class="controls"><button class="light" ${page<=1?'disabled':''} onclick="changePage('${key}',-1)">Voltar</button><button class="light" ${page>=totalPages?'disabled':''} onclick="changePage('${key}',1)">Avançar</button></div>`; }
+function changePage(key, delta){ state.paging[key]+=delta; renderAllTables(); }
+function setPageSize(key, value){ state.sizes[key]=Number(value); state.paging[key]=1; renderAllTables(); }
+function queryMatch(item, query){
+  query=String(query||'').trim();
+  if(!query) return true;
+  const code=String(item.code||'').toUpperCase();
+  const hay=[item.code,item.product,item.material,item.source].join(' ').toLowerCase();
+  const variant=query.match(/^([^%]+)%(.+)%$/i);
+  if(variant){
+    const prefix=String(variant[1]||'').toUpperCase();
+    const token=String(variant[2]||'').toUpperCase();
+    const remainder=code.slice(prefix.length);
+    return (!prefix || code.startsWith(prefix)) && (!!token && remainder.includes(token));
+  }
+  return hay.includes(query.toLowerCase());
+}
+async function doLogin(){ try{ const d=await api('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('loginUser').value,password:$('loginPass').value})}); localStorage.setItem(LS.token,d.token); localStorage.setItem(LS.user,d.username); localStorage.setItem(LS.role,d.role); localStorage.setItem(LS.userStore,d.store_id||'01'); if(d.role!=='admin') localStorage.setItem(LS.store,d.store_id||'01'); closeLogin(); hideWelcomeScreen(); updateBadges(); flash('Login realizado.','ok'); await syncAll(); }catch(e){ flash(e.message,'error'); } }
+async function forgotPassword(){ try{ const username=$('resetUsername').value.trim().toLowerCase(); const password=$('resetPassword').value; const confirm=$('resetPassword2').value; if(!username||!password) return flash('Informe usuário e nova senha.','warnbox'); if(password!==confirm) return flash('As senhas não conferem.','warnbox'); await api('/api/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})}); flash('Senha redefinida. Faça login com a nova senha.','ok'); }catch(e){ flash(e.message,'error'); } }
+function openAccountModal(){ if(!requireLogin()) return; $('accountUsername').value=localStorage.getItem(LS.user)||''; $('accountPassword').value=''; $('accountPassword2').value=''; $('accountModal').classList.add('show'); }
+function closeAccountModal(){ $('accountModal').classList.remove('show'); }
+async function changeOwnCredentials(){
+  try{
+    if(!requireLogin()) return;
+    const username=$('accountUsername').value.trim().toLowerCase();
+    const password=$('accountPassword').value;
+    const password2=$('accountPassword2').value;
+    if(!username) return flash('Informe o novo login.','warnbox');
+    if(password!==password2) return flash('As senhas não conferem.','warnbox');
+    const d=await api('/api/auth/change-credentials',{method:'POST',headers:headers(),body:JSON.stringify({username,password})});
+    localStorage.setItem(LS.user,d.username);
+    localStorage.setItem(LS.token,d.token);
+    updateBadges();
+    closeAccountModal();
+    flash('Acesso atualizado.','ok');
+  }catch(e){ flash(e.message,'error'); }
+}
+async function loadUsers(){ if(!canManageUsers()) { state.users=[]; renderUsers(); return; } const d=await api('/api/users',{headers:headers(false)}); state.users=d.users||[]; renderUsers(); }
+function renderUsers(){ const tbody=$('tbodyUsers'); if(!tbody) return; if(!canManageUsers()){ tbody.innerHTML='<tr><td colspan="5">Somente administradores podem gerenciar usuários.</td></tr>'; return; } tbody.innerHTML=(state.users||[]).map(u=>`<tr><td><input value="${u.username}" onchange="renameUser('${u.username}', this.value)"></td><td><select onchange="updateUserRole('${u.username}', this.value)"><option value="admin" ${u.role==='admin'?'selected':''}>Administrador</option><option value="funcionario" ${u.role==='funcionario'?'selected':''}>Funcionário</option><option value="separador" ${u.role==='separador'?'selected':''}>Separador</option></select></td><td><select onchange="updateUserStore('${u.username}', this.value)">${Object.entries(state.stores).map(([id,name])=>`<option value="${id}" ${String(u.store_id||'01')===String(id)?'selected':''}>${id} - ${name}</option>`).join('')}</select></td><td>${dt(u.created_at)}</td><td><div class="row"><div><button class="light" onclick="resetUserPassword('${u.username}')">Redefinir senha</button></div><div><button class="danger" onclick="removeUser('${u.username}')">Remover</button></div></div></td></tr>`).join('') || '<tr><td colspan="5">Nenhum usuário.</td></tr>'; }
+async function createUser(){ try{ if(!canManageUsers()) return flash('Sem permissão.','warnbox'); const username=$('newUsername').value.trim().toLowerCase(); const password=$('newPassword').value; const role=$('newRole').value; const store_id=$('newUserStore').value; if(!username||!password) return flash('Preencha usuário e senha.','warnbox'); const admin_password = await askAdminPassword('Digite a senha do administrador para criar o usuário:'); await api('/api/users',{method:'POST',headers:headers(),body:JSON.stringify({username,password,role,store_id,admin_password})}); $('newUsername').value=''; $('newPassword').value=''; await loadUsers(); flash('Usuário criado.','ok'); }catch(e){ flash(e.message,'error'); }}
+async function updateUserRole(username, roleValue){ try{ const user=state.users.find(u=>u.username===username); const admin_password = await askAdminPassword(`Digite a senha do administrador para alterar a permissão de ${username}:`); await api(`/api/users/${username}`,{method:'PUT',headers:headers(),body:JSON.stringify({new_username:user.username,role:roleValue,store_id:user.store_id,admin_password})}); await loadUsers(); flash('Permissão atualizada.','ok'); }catch(e){ flash(e.message,'error'); }}
+async function updateUserStore(username, storeValue){ try{ const user=state.users.find(u=>u.username===username); const admin_password = await askAdminPassword(`Digite a senha do administrador para alterar a loja de ${username}:`); await api(`/api/users/${username}`,{method:'PUT',headers:headers(),body:JSON.stringify({new_username:user.username,role:user.role,store_id:storeValue,admin_password})}); await loadUsers(); flash('Loja do usuário atualizada.','ok'); }catch(e){ flash(e.message,'error'); }}
+async function renameUser(username, value){ try{ const new_username=String(value||'').trim().toLowerCase(); if(!new_username || new_username===username) return; const user=state.users.find(u=>u.username===username); const admin_password = await askAdminPassword(`Digite a senha do administrador para renomear ${username}:`); await api(`/api/users/${username}`,{method:'PUT',headers:headers(),body:JSON.stringify({new_username,role:user.role,store_id:user.store_id,admin_password})}); await loadUsers(); flash('Usuário renomeado.','ok'); }catch(e){ flash(e.message,'error'); }}
+async function removeUser(username){ try{ if(!confirm(`Remover ${username}?`)) return; const admin_password = await askAdminPassword(`Digite a senha do administrador para remover ${username}:`); await api(`/api/users/${username}`,{method:'DELETE',headers:headers(),body:JSON.stringify({admin_password})}); await loadUsers(); flash('Usuário removido.','ok'); }catch(e){ flash(e.message,'error'); }}
+async function resetUserPassword(username){ try{ const admin_password = await askAdminPassword(`Digite a senha do administrador para redefinir a senha de ${username}:`); const d=await api(`/api/users/${username}/reset-password`,{method:'POST',headers:headers(),body:JSON.stringify({admin_password})}); flash(`Senha redefinida para ${d.temp_password}.`,'ok'); }catch(e){ flash(e.message,'error'); }}
+function renderStoresAdmin(){ const tbody=$('tbodyStoresAdmin'); if(!tbody) return; if(!canManageUsers()){ tbody.innerHTML='<tr><td colspan="3">Somente administradores podem editar lojas.</td></tr>'; return; } tbody.innerHTML=Object.entries(state.stores).map(([id,name])=>`<tr><td>${id}</td><td><input id="store_${id}" value="${name}"></td><td><button class="alt" onclick="saveStoreName('${id}')">Salvar</button></td></tr>`).join(''); }
+async function loadStores(){ const d=await api('/api/stores',{headers:headers(false)}); state.stores=d.stores||{}; $('storeSelect').innerHTML = Object.entries(state.stores).map(([id,name])=>`<option value="${id}">${id} - ${name}</option>`).join(''); $('storeSelect').value=state.selectedStore; if($('newUserStore')) $('newUserStore').innerHTML = Object.entries(state.stores).map(([id,name])=>`<option value="${id}">${id} - ${name}</option>`).join(''); renderStoresAdmin(); updateBadges(); }
+async function saveStoreName(storeId){ try{ const name=$(`store_${storeId}`).value.trim(); if(!name) return flash('Informe o nome da loja.','warnbox'); const admin_password = await askAdminPassword(`Digite a senha do administrador para salvar o nome da loja ${storeId}:`); await api(`/api/stores/${storeId}`,{method:'PUT',headers:headers(),body:JSON.stringify({name,admin_password})}); await loadStores(); await loadUsers(); flash('Nome da loja atualizado.','ok'); }catch(e){ flash(e.message,'error'); } }
+async function loadProducts(){ const d=await api('/api/products',{headers:headers(false)}); state.products=d.products||[]; }
+async function loadDraft(){ const d=await api(`/api/orders/${state.selectedStore}`,{headers:headers(false)}); state.draft=d.items||[]; }
+async function loadOrdersHistory(){ const d=await api(`/api/orders-history/${state.selectedStore}`,{headers:headers(false)}); state.ordersHistory=d.orders||[]; }
+async function loadShortagesHistory(){ const d=await api(`/api/shortages-history/${state.selectedStore}`,{headers:headers(false)}); state.shortagesHistory=d.shortages||[]; }
+async function syncAll(){ try{ if(!hasToken()){ updateBadges(); showWelcomeScreen(); return; } state.selectedStore = role()==='admin' ? (localStorage.getItem(LS.store) || '01') : (localStorage.getItem(LS.userStore) || '01'); await loadStores(); await Promise.all([loadProducts(), loadDraft(), loadOrdersHistory(), loadShortagesHistory(), loadUsers()]); renderAllTables(); }catch(e){ flash(e.message,'error'); } }
+function renderAllTables(){ renderProducts(); renderOrderCatalog(); renderDraft(); renderOrdersHistory(); renderSeparationOrders(); renderShortagesHistory(); }
+function getFilteredProducts(){ return state.products.filter(p=>queryMatch(p,$('searchStock').value)); }
+function syncSelectAllCheckbox(filtered){ const allBox=$('checkAllFiltered'); if(!allBox) return; if(!filtered.length){ allBox.checked=false; allBox.indeterminate=false; return; } const selectedCount=filtered.filter(p=>state.selectedProductCodes.has(p.code)).length; allBox.checked = selectedCount===filtered.length; allBox.indeterminate = selectedCount>0 && selectedCount<filtered.length; }
+function toggleProductSelection(code, checked){ if(!canEditStock()) return; if(checked) state.selectedProductCodes.add(code); else state.selectedProductCodes.delete(code); updateSelectedCodesBox(); updateFactorSelectionInfo(); renderProducts(); }
+function toggleSelectAllFiltered(checked){ if(!canEditStock()) return; const filtered=getFilteredProducts(); filtered.forEach(p=> checked ? state.selectedProductCodes.add(p.code) : state.selectedProductCodes.delete(p.code)); updateSelectedCodesBox(); updateFactorSelectionInfo(); renderProducts(); }
+function updateFactorSelectionInfo(){ const filtered=getFilteredProducts(); const selectedFiltered=filtered.filter(p=>state.selectedProductCodes.has(p.code)); const query=$('searchStock').value.trim(); const target = $('applySingle')?.checked ? 'somente o produto selecionado' : $('applySelected')?.checked ? `${selectedFiltered.length} produto(s) marcado(s)` : `${filtered.length} produto(s) da busca atual`; $('factorSelectionSummary').textContent = `Busca atual: ${query || 'todos os produtos'} | Alvo do fator: ${target}.`; if($('applySelected')?.checked && !selectedFiltered.length){ $('factorInfo').textContent='Marque ao menos um produto na lista para aplicar o fator nos selecionados.'; } updateStockEditPermissions(); }
+function renderProducts(){ const filtered=getFilteredProducts(); const data=paginate(filtered, state.paging.stock, state.sizes.stock); const editable=canEditStock(); state.paging.stock=data.page; $('tbodyProducts').innerHTML = data.items.map(p=>`<tr><td>${editable?`<input type="checkbox" style="width:auto" ${state.selectedProductCodes.has(p.code)?'checked':''} onchange="toggleProductSelection('${p.code}', this.checked)">`:''}</td><td>${p.code}</td><td>${p.product||''}</td><td>${p.material||''}</td><td>${fmt(p.stock)}</td><td>${fmt(p.factor)}</td><td>${editable?`<button class="light" onclick='selectEdit(${JSON.stringify(p).replace(/'/g,"&#39;")})'>Editar</button>`:'Visualizar'}</td></tr>`).join('') || '<tr><td colspan="7">Nenhum produto encontrado.</td></tr>'; syncSelectAllCheckbox(filtered); pager('stockPager','stock',data.totalItems,data.totalPages,data.page); updateFactorSelectionInfo(); updateStockEditPermissions(); }
+function selectEdit(p){ if(!canEditStock()){ $('factorInfo').textContent='Somente o administrador pode editar produtos nesta aba. Os demais usuários podem apenas visualizar.'; return; } $('editCode').value=p.code||''; $('editCode').dataset.originalCode=p.code||''; state.selectedProductCodes = new Set([p.code||''].filter(Boolean)); $('editProduct').value=p.product||''; $('editMaterial').value=p.material||''; $('editStock').value=p.stock||0; $('editFactor').value=p.factor||1; $('applySingle').checked=true; const x=$('applySelected'); if(x) x.checked=false; const y=$('applyFiltered'); if(y) y.checked=false; $('factorInfo').textContent=`Escolha se a alteração será aplicada apenas no código ${p.code||''}, nos produtos marcados ou em todos os itens encontrados pela busca atual.`; updateSelectedCodesBox(); updateFactorSelectionInfo(); renderProducts(); }
+async function saveProductEdit(){ try{ if(!canEditStock()) return flash('Somente o administrador pode editar produtos.','warnbox'); const codesFromBox=parseCodesInput($('editCode').value); const factorValue=$('editFactor').value.trim(); const stockValue=$('editStock').value.trim(); const productValue=$('editProduct').value; const materialValue=$('editMaterial').value; const originalCode = $('editCode').dataset.originalCode || codesFromBox[0] || ''; const payload={ product:productValue, material:materialValue, update_product:true, update_material:true, update_stock:stockValue!=='', update_factor:factorValue!=='' }; if(payload.update_stock) payload.stock=Number(stockValue||0); if(payload.update_factor){ payload.factor=Number(factorValue||0); if(payload.factor<=0) return flash('Informe um fator válido.','warnbox'); } if($('applySelected')?.checked){ const codes=codesFromBox.length ? codesFromBox : Array.from(state.selectedProductCodes); if(!codes.length) return flash('Marque ao menos um produto para editar.','warnbox'); await api('/api/products/bulk-update',{method:'POST',headers:headers(),body:JSON.stringify({codes,...payload})}); flash(`Alteração aplicada em ${codes.length} produto(s) selecionado(s).`,'ok'); } else if($('applyFiltered')?.checked){ const search=$('searchStock').value.trim(); const filtered=getFilteredProducts(); if(!search) return flash('Digite a busca antes de aplicar em todos da busca.','warnbox'); if(!filtered.length) return flash('Nenhum produto encontrado para essa busca.','warnbox'); await api('/api/products/bulk-update',{method:'POST',headers:headers(),body:JSON.stringify({search,...payload})}); flash(`Alteração aplicada em ${filtered.length} produto(s) encontrados pela busca.`,'ok'); } else { const code = codesFromBox[0] || originalCode; if(!code) return flash('Selecione um produto.','warnbox'); const singlePayload={new_code:code,product:productValue,material:materialValue,stock:stockValue===''?0:Number(stockValue||0),factor:factorValue===''?1:Number(factorValue||1)}; if(singlePayload.factor<=0) return flash('Informe um fator válido.','warnbox'); await api(`/api/products/${encodeURIComponent(originalCode||code)}`,{method:'PUT',headers:headers(),body:JSON.stringify({...singlePayload,apply_group:false})}); flash('Produto atualizado.','ok'); $('editCode').dataset.originalCode = code; }
+await loadProducts(); renderAllTables(); }catch(e){ flash(e.message,'error'); } }
+function generateStockReport(){ try{ if(!requireLogin()) return; const query=encodeURIComponent($('searchStock').value.trim()); window.open(`/api/products/export/pdf?q=${query}`,'_blank'); }catch(e){ flash(e.message,'error'); } }
+function renderOrderCatalog(){ const filtered=state.products.filter(p=>queryMatch(p,$('searchOrder').value)); const data=paginate(filtered, state.paging.orderCatalog, state.sizes.orderCatalog); state.paging.orderCatalog=data.page; $('tbodyOrderCatalog').innerHTML = data.items.map(p=>`<tr><td>${p.code}</td><td>${p.product||''}</td><td>${fmt(p.stock)}</td><td>${fmt(p.factor)}</td><td><button class="light" onclick='selectOrderProduct(${JSON.stringify(p).replace(/'/g,"&#39;")})'>Selecionar</button></td></tr>`).join('') || '<tr><td colspan="5">Nenhum produto encontrado.</td></tr>'; pager('orderCatalogPager','orderCatalog',data.totalItems,data.totalPages,data.page); }
+function selectOrderProduct(p){ $('orderCode').value=p.code; $('orderProduct').value=p.product||''; $('orderFactor').value=p.factor||1; $('orderStock').value=p.stock||0; if(Number(p.stock||0)<=0){ $('orderBoxes').value='0'; $('orderUnits').value='0'; $('orderCalc').className='notice warnbox'; $('orderCalc').textContent='Produto sem estoque. Não é possível adicionar ao pedido.'; return; } $('orderBoxes').value='1'; $('orderUnits').value=''; calcOrderFromBoxes(); $('orderBoxes').focus(); }
+function adjustBoxes(delta){ const cur=Number($('orderBoxes').value||0); $('orderBoxes').value=Math.max(0,cur+delta); calcOrderFromBoxes(); }
+function calcOrderFromBoxes(){ const factor=Number($('orderFactor').value||1); const boxes=Number($('orderBoxes').value||0); $('orderUnits').value = boxes && factor ? (boxes*factor).toFixed(2) : ''; updateOrderCalc(); }
+function calcOrderFromUnits(){ const factor=Number($('orderFactor').value||1); const units=Number($('orderUnits').value||0); $('orderBoxes').value = factor ? (units/factor).toFixed(2) : ''; updateOrderCalc(); }
+function updateOrderCalc(){ const stock=Number($('orderStock').value||0); const units=Number($('orderUnits').value||0); const boxes=Number($('orderBoxes').value||0); const factor=Number($('orderFactor').value||1); if(!$('orderCode').value){ $('orderCalc').className='notice'; $('orderCalc').textContent='Selecione um produto.'; return; } if(units>stock){ $('orderCalc').className='notice warnbox'; $('orderCalc').textContent=`Caixas ${fmt(boxes)} | Unidades ${fmt(units)} | Estoque insuficiente`; } else { $('orderCalc').className='notice ok'; $('orderCalc').textContent=`Caixas ${fmt(boxes)} | Unidades ${fmt(units)} | Fator ${fmt(factor)}`; } }
+function clearCurrentSelection(){ $('orderCode').value=''; $('orderProduct').value=''; $('orderFactor').value=''; $('orderStock').value=''; $('orderBoxes').value=''; $('orderUnits').value=''; $('orderCalc').className='notice'; $('orderCalc').textContent='Selecione um produto.'; }
+async function persistDraft(){ await api(`/api/orders/${state.selectedStore}`,{method:'PUT',headers:headers(),body:JSON.stringify({items:state.draft})}); }
+async function addDraftItem(){ const code=$('orderCode').value; if(!code) return flash('Selecione um produto.','warnbox'); const item={code,product:$('orderProduct').value,factor:Number($('orderFactor').value||1),boxes:Number($('orderBoxes').value||0),units:Number($('orderUnits').value||0),stock:Number($('orderStock').value||0)}; if(item.stock<=0) return flash('Produto sem estoque. Não é possível adicionar.','warnbox'); if(!item.boxes && !item.units) return flash('Informe caixas ou unidades.','warnbox'); if(!item.units) item.units=item.boxes*item.factor; if(!item.boxes) item.boxes=item.units/item.factor; if(item.units>item.stock){ item.units=item.stock; item.boxes=item.factor? Number((item.stock/item.factor).toFixed(2)) : 0; $('orderBoxes').value=item.boxes; $('orderUnits').value=item.units; flash('Quantidade ajustada automaticamente para o estoque disponível.','warnbox'); } item.insufficient=item.units>item.stock; const idx=state.draft.findIndex(x=>x.code===item.code); if(idx>=0) state.draft[idx]=item; else state.draft.push(item); await persistDraft(); renderDraft(); flash('Item adicionado ao pedido.','ok'); }
+function renderDraft(){ const summary={items:state.draft.length, boxes:state.draft.reduce((s,x)=>s+Number(x.boxes||0),0), units:state.draft.reduce((s,x)=>s+Number(x.units||0),0)}; $('draftSummary').innerHTML = [`<div class="summary-box"><strong>Itens</strong><div>${summary.items}</div></div>`,`<div class="summary-box"><strong>Total de caixas</strong><div>${fmt(summary.boxes)}</div></div>`,`<div class="summary-box"><strong>Total de unidades</strong><div>${fmt(summary.units)}</div></div>`].join(''); const data=paginate(state.draft, state.paging.draft, state.sizes.draft); state.paging.draft=data.page; $('tbodyDraft').innerHTML = data.items.map((p,i)=>`<tr><td>${p.code}</td><td>${p.product||''}</td><td><input type="number" step="0.01" value="${p.boxes}" onchange="editDraftByPage(${i},'boxes',this.value)"></td><td><input type="number" step="0.01" value="${p.units}" onchange="editDraftByPage(${i},'units',this.value)"></td><td>${fmt(p.factor)}</td><td><button class="danger" onclick="removeDraftByPage(${i})">Remover</button></td></tr>`).join('') || '<tr><td colspan="6">Nenhum item na pré-visualização.</td></tr>'; pager('draftPager','draft',data.totalItems,data.totalPages,data.page); }
+function pageIndex(key, pageRow){ return (state.paging[key]-1)*state.sizes[key] + pageRow; }
+async function editDraftByPage(i, field, value){ const idx=pageIndex('draft', i); const item=state.draft[idx]; if(!item) return; if(field==='boxes'){ item.boxes=Number(value||0); item.units=item.boxes*Number(item.factor||1); } else { item.units=Number(value||0); item.boxes=Number(item.factor||1) ? item.units/Number(item.factor||1) : 0; } item.insufficient=item.units>Number(item.stock||0); await persistDraft(); renderDraft(); }
+async function removeDraftByPage(i){ const idx=pageIndex('draft', i); state.draft.splice(idx,1); await persistDraft(); renderDraft(); }
+async function clearDraftOrder(){ state.draft=[]; if($('orderObservation')) $('orderObservation').value=''; await persistDraft(); renderDraft(); flash('Montagem limpa.','warnbox'); }
+async function finalizeOrder(){ try{ if(!state.draft.length) return flash('Adicione itens antes de salvar.','warnbox'); const observation = ($('orderObservation')?.value || '').trim(); const d=await api(`/api/orders/${state.selectedStore}/finalize`,{method:'POST',headers:headers(),body:JSON.stringify({items:state.draft, observation})}); state.draft=[]; if($('orderObservation')) $('orderObservation').value=''; await Promise.all([loadOrdersHistory(), loadShortagesHistory()]); renderAllTables(); clearCurrentSelection(); flash(`Pedido salvo com a ordem ${d.order_no}.`,'ok'); showTab('ordem', document.querySelectorAll('.tabs button')[2]); }catch(e){ flash(e.message,'error'); } }
+function renderOrdersHistory(){ const visibleOrders = state.ordersHistory.filter(o => (o.status||'aberta') !== 'baixada'); const data=paginate(visibleOrders, state.paging.ordersHistory, state.sizes.ordersHistory); state.paging.ordersHistory=data.page; $('tbodyOrders').innerHTML = data.items.map(o=>`<tr><td><button class="link-btn" onclick="openOrderModal('${o.order_no}')">🔍 ${o.order_no}</button></td><td>${dt(o.created_at)}</td><td>${o.item_count}</td><td>${fmt(o.total_boxes)}</td><td>${fmt(o.total_units)}</td><td><button class="danger" onclick="deleteOrder('${o.order_no}')">Excluir</button></td></tr>`).join('') || '<tr><td colspan="6">Nenhuma ordem salva.</td></tr>'; pager('ordersPager','ordersHistory',data.totalItems,data.totalPages,data.page); }
+async function openOrderModal(orderNo){ try{ const d=await api(`/api/orders-history/${state.selectedStore}/${orderNo}`,{headers:headers(false)}); const order=d.order; const editable=canEditOrders(); $('orderModal').innerHTML = `<div class="modal"><div class="modal-head"><div><strong>Ordem ${order.order_no}</strong><div class="small">${dt(order.created_at)} | Status: ${(order.status||'aberta')}</div>${order.observation?`<div class="notice" style="margin-top:8px"><strong>Observação:</strong> ${order.observation}</div>`:''}</div><div class="row no-print" style="min-width:unset"><button class="light" onclick="window.open('/api/orders-history/${state.selectedStore}/${order.order_no}/export/pdf','_blank')">PDF</button><button class="light" onclick="window.open('/api/orders-history/${state.selectedStore}/${order.order_no}/export/word','_blank')">Word</button><button class="light" onclick="window.open('/api/orders-history/${state.selectedStore}/${order.order_no}/export/excel','_blank')">Excel</button><button class="light" onclick="printModalTable('orderModal')">Imprimir</button><button class="light" onclick="closeModal('orderModal')">Fechar</button></div></div><div class="table-wrap"><table><thead><tr><th>Código</th><th>Produto</th><th>Caixas</th><th>Unidades</th><th>Fator</th><th>Ação</th></tr></thead><tbody>${order.items.map((p,i)=>`<tr><td>${p.code}</td><td>${p.product||''}</td><td>${editable ? `<input type='number' step='0.01' value='${p.boxes}' onchange="updateOrderModalItem('${order.order_no}',${i},'boxes',this.value)">` : fmt(p.boxes)}</td><td>${editable ? `<input type='number' step='0.01' value='${p.units}' onchange="updateOrderModalItem('${order.order_no}',${i},'units',this.value)">` : fmt(p.units)}</td><td>${fmt(p.factor)}</td><td>${editable ? `<button class='danger' onclick="removeOrderModalItem('${order.order_no}',${i})">Remover</button>` : '-'}</td></tr>`).join('') || '<tr><td colspan="6">Sem itens.</td></tr>'}</tbody></table></div></div>`; $('orderModal').dataset.order = JSON.stringify(order); $('orderModal').classList.add('show'); }catch(e){ flash(e.message,'error'); } }
+function closeModal(id){ $(id).classList.remove('show'); $(id).innerHTML=''; }
+window.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ closeModal('orderModal'); closeModal('shortageModal'); closeLogin(); closeAccountModal(); } });
+$('orderModal').addEventListener('click', (e)=>{ if(e.target.id==='orderModal') closeModal('orderModal'); });
+$('shortageModal').addEventListener('click', (e)=>{ if(e.target.id==='shortageModal') closeModal('shortageModal'); });
+$('adminPasswordModal').addEventListener('click', (e)=>{ if(e.target.id==='adminPasswordModal') closeAdminPasswordModal(); });
+$('accountModal').addEventListener('click', (e)=>{ if(e.target.id==='accountModal') closeAccountModal(); });
+function getModalOrder(){ return JSON.parse($('orderModal').dataset.order||'{}'); }
+async function saveModalOrder(order){ await api(`/api/orders-history/${state.selectedStore}/${order.order_no}`,{method:'PUT',headers:headers(),body:JSON.stringify({items:order.items})}); $('orderModal').dataset.order=JSON.stringify(order); await loadOrdersHistory(); renderOrdersHistory(); }
+async function updateOrderModalItem(orderNo, i, field, value){ const order=getModalOrder(); const item=order.items[i]; if(!item) return; if(field==='boxes'){ item.boxes=Number(value||0); item.units=item.boxes*Number(item.factor||1); } else { item.units=Number(value||0); item.boxes=Number(item.factor||1) ? item.units/Number(item.factor||1) : 0; } await saveModalOrder(order); }
+async function removeOrderModalItem(orderNo, i){ const order=getModalOrder(); order.items.splice(i,1); await saveModalOrder(order); await openOrderModal(orderNo); }
+async function deleteOrder(orderNo){
+  if(role()!=='admin') return flash('Somente administradores podem excluir ordens.','warnbox');
+  if(!confirm(`Excluir a ordem ${orderNo}?`)) return;
+  try{
+    const admin_password = await askAdminPassword(`Digite a senha do administrador para excluir a ordem ${orderNo}:`);
+    await api(`/api/orders-history/${state.selectedStore}/${orderNo}`,{method:'DELETE',headers:headers(),body:JSON.stringify({admin_password})});
+    await Promise.all([loadOrdersHistory(), loadShortagesHistory()]);
+    renderAllTables();
+    flash('Ordem excluída.','ok');
+  }catch(e){ flash(e.message,'error'); }
+}
+function renderSeparationOrders(){ const openOrders = state.ordersHistory.filter(o => !['baixada'].includes(o.status||'aberta')); $('tbodySeparationOrders').innerHTML = openOrders.map(o=>`<tr><td><button class="link-btn" onclick="openShortageEditor('${o.order_no}')">🔍 ${o.order_no}</button></td><td>${dt(o.created_at)}</td><td>${o.item_count}</td><td>${fmt(o.total_boxes)}</td><td><button class="light" onclick="openShortageEditor('${o.order_no}')">Marcar faltas</button></td></tr>`).join('') || '<tr><td colspan="5">Nenhuma ordem salva.</td></tr>'; }
+function renderShortagesHistory(){ const data=paginate(state.shortagesHistory, state.paging.shortagesHistory, state.sizes.shortagesHistory); state.paging.shortagesHistory=data.page; $('tbodyShortages').innerHTML = data.items.map(s=>`<tr><td><button class="link-btn" onclick="openShortageViewer('${s.order_no}')">🔍 ${s.order_no}</button></td><td>${dt(s.created_at)}</td><td>${s.item_count}</td><td>${fmt(s.total_left_boxes)}</td><td>${fmt(s.total_sent_boxes)}</td><td><div class="row" style="min-width:520px"><div><button class="light" onclick="openShortageViewer('${s.order_no}')">Ver</button></div><div><button class="light" onclick="window.open('/api/shortages-history/${state.selectedStore}/${s.order_no}/export/pdf','_blank')">PDF</button></div><div><button class="light" onclick="window.open('/api/shortages-history/${state.selectedStore}/${s.order_no}/export/word','_blank')">Word</button></div><div><button class="light" onclick="window.open('/api/shortages-history/${state.selectedStore}/${s.order_no}/export/excel','_blank')">Excel</button></div><div><button class="light" onclick="printShortageHistory('${s.order_no}')">Imprimir</button></div><div><button class="danger" onclick="deleteShortageHistory('${s.order_no}')">Excluir</button></div></div></td></tr>`).join('') || '<tr><td colspan="6">Nenhum histórico de faltas.</td></tr>'; pager('shortagesPager','shortagesHistory',data.totalItems,data.totalPages,data.page); }
+async function openShortageEditor(orderNo){ try{ const d=await api(`/api/shortages-history/${state.selectedStore}/${orderNo}`,{headers:headers(false)}); $('shortageModal').dataset.mode='edit'; $('shortageModal').dataset.order=orderNo; $('shortageModal').dataset.items=JSON.stringify(d.items); $('shortageModal').dataset.transport=d.transport||''; $('shortageModal').dataset.cdWarning=d.cd_warning||''; $('shortageModal').dataset.orderObservation=d.observation||''; renderShortageModal('edit'); }catch(e){ flash(e.message,'error'); } }
+async function openShortageViewer(orderNo){ try{ const d=await api(`/api/shortages-history/${state.selectedStore}/${orderNo}`,{headers:headers(false)}); $('shortageModal').dataset.mode='view'; $('shortageModal').dataset.order=orderNo; $('shortageModal').dataset.items=JSON.stringify(d.items); $('shortageModal').dataset.transport=d.transport||''; $('shortageModal').dataset.cdWarning=d.cd_warning||''; $('shortageModal').dataset.orderObservation=d.observation||''; renderShortageModal('view'); }catch(e){ flash(e.message,'error'); } }
+function renderShortageModal(mode){ const orderNo=$('shortageModal').dataset.order; const items=JSON.parse($('shortageModal').dataset.items||'[]'); const readonly = mode==='view'; const transport = $('shortageModal').dataset.transport || ''; const cdWarning = $('shortageModal').dataset.cdWarning || ''; const orderObservation = $('shortageModal').dataset.orderObservation || ''; $('shortageModal').innerHTML = `<div class="modal"><div class="modal-head"><div><strong>${readonly?'Histórico de faltas':'Faltas de separação'} ${orderNo}</strong>${orderObservation?`<div class="notice" style="margin-top:8px"><strong>Observação do pedido:</strong> ${orderObservation}</div>`:''}${cdWarning?`<div class="notice warnbox" style="margin-top:8px">${cdWarning}</div>`:''}</div><div class="row no-print" style="min-width:unset">${readonly?`<button class="light" onclick="window.open('/api/shortages-history/${state.selectedStore}/${orderNo}/export/pdf','_blank')">PDF</button><button class="light" onclick="window.open('/api/shortages-history/${state.selectedStore}/${orderNo}/export/word','_blank')">Word</button><button class="light" onclick="window.open('/api/shortages-history/${state.selectedStore}/${orderNo}/export/excel','_blank')">Excel</button><button class="light" onclick="printModalTable('shortageModal')">Imprimir</button>`:`<button class="warn" onclick="saveShortageRecord()">Salvar faltas</button><button class="alt" onclick="applyBaixa()">Aplicar baixa</button>`}<button class="light" onclick="closeModal('shortageModal')">Fechar</button></div></div><div class="row" style="margin-bottom:8px"><div><label>Transporte</label>${readonly?`<div class="notice">${transport||'-'}</div>`:`<select id="shortageTransport"><option value="">Selecione</option><option value="Van" ${transport==='Van'?'selected':''}>Van</option><option value="Caminhão" ${transport==='Caminhão'?'selected':''}>Caminhão</option><option value="Carro" ${transport==='Carro'?'selected':''}>Carro</option></select>`}</div></div><div class="small" style="margin-bottom:8px">Caixa = quantidade de caixas do pedido. Permaneceu no estoque = caixas que ficaram. Enviado = caixas enviadas e fator aplicado.</div><div class="table-wrap"><table><thead><tr><th>Código</th><th>Produto</th><th>Caixa</th><th>Não foi</th><th>Permaneceu no CD</th><th>Enviados</th></tr></thead><tbody>${items.map((p,i)=>{ const sentBoxes = p.not_sent ? 0 : Math.max(0, Number(p.requested_boxes||0)-Number(p.left_boxes||0)); const sentUnits = sentBoxes * Number(p.factor||1); return `<tr><td>${p.code}</td><td>${p.product||''}</td><td>${fmt(p.requested_boxes)}</td><td>${readonly ? (p.not_sent?'Sim':'Não') : `<input type='checkbox' ${p.not_sent?'checked':''} onchange="toggleNotSent(${i}, this.checked)">`}</td><td>${readonly ? fmt(p.left_boxes) : `<input type='number' min='0' step='0.01' value='${p.left_boxes||0}' onchange="setLeftBoxes(${i}, this.value)">`}</td><td>${fmt(sentBoxes)} caixa(s) | fator ${fmt(p.factor)} | ${fmt(sentUnits)} un.</td></tr>`; }).join('') || '<tr><td colspan="6">Sem itens.</td></tr>'}</tbody></table></div></div>`; $('shortageModal').classList.add('show'); }
+function shortageItems(){ return JSON.parse($('shortageModal').dataset.items||'[]'); }
+function shortageTransport(){ return $('shortageTransport') ? $('shortageTransport').value : ($('shortageModal').dataset.transport || ''); }
+function updateShortageItems(items){ $('shortageModal').dataset.items=JSON.stringify(items); renderShortageModal($('shortageModal').dataset.mode); }
+function toggleNotSent(i, checked){ const items=shortageItems(); items[i].not_sent=checked; if(checked) items[i].left_boxes=0; updateShortageItems(items); }
+function setLeftBoxes(i, value){ const items=shortageItems(); items[i].left_boxes=Number(value||0); updateShortageItems(items); }
+async function saveShortageRecord(){ try{ const orderNo=$('shortageModal').dataset.order; const items=shortageItems(); const transport = shortageTransport(); await api(`/api/shortages-history/${state.selectedStore}/${orderNo}`,{method:'PUT',headers:headers(),body:JSON.stringify({items, transport})}); $('shortageModal').dataset.transport = transport; closeModal('shortageModal'); await Promise.all([loadShortagesHistory(), loadOrdersHistory()]); renderAllTables(); flash(`Faltas da ordem ${orderNo} salvas no histórico.`,'ok'); }catch(e){ flash(e.message,'error'); } }
+async function applyBaixa(){ try{ const orderNo=$('shortageModal').dataset.order; const items=shortageItems(); const transport = shortageTransport(); const d = await api(`/api/shortages-history/${state.selectedStore}/${orderNo}/apply-baixa`,{method:'POST',headers:headers(),body:JSON.stringify({items, transport})}); closeModal('shortageModal'); await Promise.all([loadProducts(), loadOrdersHistory(), loadShortagesHistory()]); renderAllTables(); flash(d.message || `Baixa aplicada na ordem ${orderNo}.`,'ok'); }catch(e){ flash(e.message,'error'); } }
+async function deleteShortageHistory(orderNo){
+  if(role()!=='admin') return flash('Somente administradores podem excluir histórico de faltas.','warnbox');
+  if(!confirm(`Excluir o histórico de faltas ${orderNo}?`)) return;
+  try{
+    const admin_password = await askAdminPassword(`Digite a senha do administrador para excluir o histórico ${orderNo}:`);
+    await api(`/api/shortages-history/${state.selectedStore}/${orderNo}`,{method:'DELETE',headers:headers(),body:JSON.stringify({admin_password})});
+    await loadShortagesHistory();
+    renderShortagesHistory();
+    flash('Histórico de faltas excluído.','ok');
+  }catch(e){ flash(e.message,'error'); }
+}
+function printShortageHistory(orderNo){ window.open(`/api/shortages-history/${state.selectedStore}/${orderNo}/export/print`, '_blank'); }
+function printModalTable(id){ const html=$(id).innerHTML; const w=window.open('','_blank'); w.document.write(`<html><head><title>Imprimir</title></head><body>${html}</body></html>`); w.document.close(); w.focus(); w.print(); }
+async function changeStore(v){ if(role()!=='admin'){ state.selectedStore = localStorage.getItem(LS.userStore) || '01'; $('storeSelect').value=state.selectedStore; return; } state.selectedStore=String(v||'01').padStart(2,'0'); localStorage.setItem(LS.store,state.selectedStore); updateBadges(); await Promise.all([loadDraft(), loadOrdersHistory(), loadShortagesHistory()]); renderAllTables(); }
+
+async function importFiles(){
+  try{
+    if(!requireLogin('Faça login como administrador para importar.')) return;
+    if(!canImport()) return flash('Somente administrador pode importar.','warnbox');
+    const files = document.getElementById('fileImport').files;
+    if(!files.length){ $('importMsg').className='notice warnbox'; $('importMsg').textContent='Selecione ao menos um arquivo.'; return; }
+    $('importMsg').className='notice';
+    $('importMsg').textContent='Importando arquivos...';
+    const admin_password = await askAdminPassword('Digite a senha do administrador para importar os arquivos:');
+    const fd = new FormData();
+    fd.append('admin_password', admin_password);
+    [...files].forEach(f => fd.append('files', f));
+    const res = await fetch('/api/stock/import-many', {
+      method:'POST',
+      headers:{ Authorization: 'Bearer ' + (localStorage.getItem(LS.token) || '') },
+      body: fd
+    });
+    const text = await res.text();
+    let data={};
+    try{ data=JSON.parse(text); }catch(e){ throw new Error('Servidor retornou HTML em vez de JSON.'); }
+    if(res.status===401){ clearSession(); updateBadges(); showWelcomeScreen(); openLogin(true); throw new Error(data.error || 'Faça login novamente.'); }
+    if(!res.ok){ throw new Error(data.error || 'Falha ao importar arquivos.'); }
+    $('fileImport').value='';
+    $('importMsg').className='notice ok';
+    $('importMsg').textContent='Importação concluída: ' + (data.imports || data.imported || []).map(x => `${x.file || x.file_name} (${x.count})`).join(', ');
+    await loadProducts();
+    renderProducts();
+    renderOrderCatalog();
+    flash('Importação concluída com sucesso.','ok');
+  }catch(e){
+    $('importMsg').className='notice error';
+    $('importMsg').textContent=e.message;
+    flash(e.message,'error');
+  }
+}
+
+window.addEventListener('load', ()=>{ state.selectedStore = localStorage.getItem(LS.store) || '01'; updateBadges(); hideWelcomeIfLogged(); updateStockEditPermissions(); $('editCode')?.addEventListener('change', syncSelectedCodesFromBox); if(hasToken()) syncAll(); });
+</script>
+</body>
+</html>
